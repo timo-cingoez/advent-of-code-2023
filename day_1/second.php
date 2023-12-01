@@ -2,8 +2,7 @@
 
 $input = file_get_contents('input.txt');
 $lines = array_filter(explode(PHP_EOL, $input));
-$numberStrings = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
-$hack = array(
+$stringNumbers = array(
     "twone" => "21",
     "sevenine" => "79",
     "oneight" => "18",
@@ -26,7 +25,7 @@ $hack = array(
 $numbersInLines = [];
 for ($i = 0; $i < count($lines); $i++) {
     $line = $lines[$i];
-    foreach ($hack as $string => $num) {
+    foreach ($stringNumbers as $string => $num) {
         $line = str_replace($string, $num, $line);
     }
     for ($j = 0; $j < strlen($line); $j++) {
@@ -48,7 +47,7 @@ for ($i = 0; $i < count($numbersInLines); $i++) {
         $calibrationValues[] = intval($num.''.$num);
     }
 }
-print_r($calibrationValues);
+// print_r($calibrationValues);
 
 $calibrationSum = 0;
 for ($i = 0; $i < count($calibrationValues); $i++) {

@@ -2,7 +2,6 @@
 
 $input = file_get_contents('input.txt');
 $lines = array_filter(explode(PHP_EOL, $input));
-$numberString = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 
 $numbersInLines = [];
 for ($i = 0; $i < count($lines); $i++) {
