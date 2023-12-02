@@ -3,36 +3,23 @@
 $input = file_get_contents('input.txt');
 $games = array_filter(explode(PHP_EOL, $input));
 
-$powerSum = 0;
+$sumOfPowers = 0;
 foreach ($games as $game) {
-    $isPossible = true;
+    $minColors = ['red' => 0, 'green' => 0, 'blue' => 0];
 
-    $tmp = explode(' ', $game);
-    $id = str_replace(':', '', $tmp[1]);
-
-    $tmp = explode(': ', $game);
-    $setList = explode('; ', $tmp[1]);
-
-    $colorMin = [
-        'red' => 0,
-        'green' => 0,
-        'blue' => 0
-    ];
+    $setList = explode('; ', explode(': ', $game)[1]);
     for ($i = 0; $i < count($setList); $i++) {
         $set = explode(', ', $setList[$i]);
         for ($j = 0; $j < count($set); $j++) {
-            $cubeCountAndColor = explode(' ', $set[$j]);
-            if ((int)$cubeCountAndColor[0] > $colorMin[$cubeCountAndColor[1]]) {
-                $colorMin[$cubeCountAndColor[1]] = $cubeCountAndColor[0];
+            list($count, $color) = explode(' ', $set[$j]);
+            if ((int)$count > $minColors[$color]) {
+                $minColors[$color] = (int)$count;
             }
         }
     }
 
-    $colorMins[$id] = $colorMin;
-    $powerSum += $colorMin['red'] * $colorMin['green'] * $colorMin['blue'];
+    $sumOfPowers += $minColors['red'] * $minColors['green'] * $minColors['blue'];
 }
 
-print_r($colorMins);
-
-echo "Sum of the powers of the minimum sets of cubes: {$powerSum}\n";
+echo "Sum of the powers of the minimum sets of cubes: {$sumOfPowers}\n";
 
