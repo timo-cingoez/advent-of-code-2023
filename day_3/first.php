@@ -11,7 +11,6 @@ for ($i = 0; $i < count($lines); $i++) {
 
     $offset = 0;
     for ($j = 0; $j < count($nums); $j++) {
-        $found = false;
         $startPos = strpos($lines[$i], $nums[$j], $offset);
         $endPos = $startPos + (strlen($nums[$j]) - 1);
         $offset = $endPos + 1;
@@ -25,12 +24,14 @@ for ($i = 0; $i < count($lines); $i++) {
         if (strlen($nums[$j]) > 2) {
             $adjPosList[] = $startPos + 1;
         }
+        
+        $found = false;
 
         // Check current line.
         $before = in_array($lines[$i][$left], $symbols); 
         $after = in_array($lines[$i][$right], $symbols); 
         if ($before || $after) {
-            $numsWithAdjSymbols[$i][] = $nums[$j];
+            $sumPartNums += $nums[$j];
             $found = true;
         }
 
@@ -38,7 +39,7 @@ for ($i = 0; $i < count($lines); $i++) {
         if (!$found && isset($lines[$i - 1])) {
             for ($k = 0; $k < count($adjPosList); $k++) {
                 if (in_array($lines[$i - 1][$adjPosList[$k]], $symbols)) {
-                    $numsWithAdjSymbols[$i][] = $nums[$j];
+                    $sumPartNums += $nums[$j];
                     $found = true;
                     break;
                 }
@@ -49,7 +50,7 @@ for ($i = 0; $i < count($lines); $i++) {
         if (!$found && isset($lines[$i + 1])) {
             for ($k = 0; $k < count($adjPosList); $k++) {
                 if (in_array($lines[$i + 1][$adjPosList[$k]], $symbols)) {
-                    $numsWithAdjSymbols[$i][] = $nums[$j];
+                    $sumPartNums += $nums[$j];
                     $found = true;
                     break;
                 }
@@ -59,12 +60,5 @@ for ($i = 0; $i < count($lines); $i++) {
 
 }
 
-$sum = 0;
-for ($i = 0; $i < count($numsWithAdjSymbols); $i++) {
-    for ($j = 0; $j < count($numsWithAdjSymbols[$i]); $j++) {
-        $sum += $numsWithAdjSymbols[$i][$j];
-    }
-}
-
-echo "Sum of nums with adjactent symbols: {$sum}\n";
+echo "Sum of nums with adjacent symbols: {$sumPartNums}\n";
 

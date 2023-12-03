@@ -4,7 +4,6 @@ $input = file_get_contents('input.txt');
 $lines = array_filter(explode(PHP_EOL, $input));
 
 $numberPosInLines = [];
-$starProducts = [];
 for ($i = 0; $i < count($lines); $i++) {
     preg_match_all('/([0-9])+/', $lines[$i], $matches);
     $nums = $matches[0];
@@ -23,7 +22,7 @@ for ($i = 0; $i < count($lines); $i++) {
     }
 }
 
-$sumPartNums = 0;
+$sum = 0;
 for ($i = 0; $i < count($lines); $i++) {
     preg_match_all('/[*]/', $lines[$i], $matches);
     $stars = $matches[0];
@@ -73,16 +72,11 @@ for ($i = 0; $i < count($lines); $i++) {
         }
 
         if (count($adjNums[$j]) === 2) {
-            $starProducts[] = $adjNums[$j][0] * $adjNums[$j][1];
+            $sum += $adjNums[$j][0] * $adjNums[$j][1];
         }
     }
 
 }
 
-$sum = 0;
-for ($i = 0; $i < count($starProducts); $i++) {
-    $sum += $starProducts[$i];
-}
-
-echo "Sum of stars with 2 adjactent nums: {$sum}\n";
+echo "Sum of num products of stars with 2 adjactent nums: {$sum}\n";
 
