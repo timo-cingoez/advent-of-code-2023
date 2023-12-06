@@ -6,4 +6,5 @@
 - [X] Day 3
 - [X] Day 4
 - [X] Day 5
-- [ ] Day 6
+- [X] Day 6
+- [ ] Day 7
