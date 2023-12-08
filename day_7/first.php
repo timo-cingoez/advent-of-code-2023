@@ -6,12 +6,11 @@ $lines = array_filter(explode(PHP_EOL, $input));
 $pairs = [];
 for ($i = 0; $i < count($lines); $i++) {
     list($hand, $bid) = explode(' ', $lines[$i]);
-    #echo "{$hand} {$bid}\n";
-    $pairs[] = ['hand' => $hand, 'bid' => $bid, 'strength' => 0];
-}
-
-for ($i = 0; $i < count($pairs); $i++) {
-    $pairs[$i]['strength'] = get_hand_strength($pairs[$i]['hand']);
+    $pairs[] = [
+        'hand' => $hand,
+        'bid' => $bid,
+        'strength' => get_hand_type($hand)
+    ];
 }
 
 usort($pairs, 'cmp');
@@ -27,58 +26,35 @@ for ($i = 0; $i < count($pairs); $i++) {
 
 echo "What are the total winnings? {$sum}\n";
 
-function get_hand_strength($hand) {
-    $strength = 0;
+function get_hand_type($hand) {
+    $charCounts = array_count_values(str_split($hand));
+    sort($charCounts);
 
-    $uniqueChars = array_unique(str_split($hand));
-    $uniqueCharCount = count($uniqueChars);
-
-    // Five of a kind
-    if ($uniqueCharCount === 1) {
-        $strength = 7;
-    }
-
-    // Four of a kind / Full house
-    if ($uniqueCharCount === 2) {
-        $firstCharCount = count(array_keys($uniqueChars, $uniqueChars[0]));
-        if ($firstCharCount === 1 || $firstCharCount === 4) {
-            $strength = 6;
-        }
-        if ($firstCharCount === 3 || $firstCharCount === 2) {
-            $strength = 5;
-        }
-    }
-
-    // Three of a kind / Two pair
-    if ($uniqueCharCount === 3) {
-        foreach ($uniqueChars as $char) {
-            if (count(array_keys(str_split($hand), $char)) === 2) {
-                $strength = 3;
-                break;
-            }
-            if (count(array_keys(str_split($hand), $char)) === 3) {
-                $strength = 4;
-                break;
-            }
-        }
-    }
-
-    // One pair
-    if ($uniqueCharCount === 2 || $uniqueCharCount === 4) {
-        $strength = 2;
-    }
-
-    // High card
-    if ($uniqueCharCount === 5) {
-        $strength = 1;
-    }
-
-    return $strength;
-}
+    if ($charCounts === [5]) {
+        // Five of a kind
+        return 7;
+    } elseif ($charCounts === [1, 4]) {
+        // Four of a kind
+        return 6;
+    } elseif ($charCounts === [2, 3]) {
+        // Full house
+        return 5;
+    } elseif ($charCounts === [1, 1, 3]) {
+        // Three of a kind
+        return 4;
+    } elseif ($charCounts === [1, 2, 2]) {
+        // Two pair
+        return 3;
+    } elseif ($charCounts === [1, 1, 1, 2]) {
+        // One pair
+        return 2;
+    } elseif ($charCounts === [1, 1, 1, 1, 1]) {
+        // High card
+        return 1;
+    } 
+};
 
 function cmp($a, $b) {
-    #echo "Comparing {$a['hand']} ({$a['strength']}) with {$b['hand']} ({$b['strength']})\n";
-
     $charStr = [
         'A' => 13,
         'K' => 12,
