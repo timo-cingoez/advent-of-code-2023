@@ -1,6 +1,6 @@
 <?php
 
-$input = file_get_contents('input.txt');
+$input = file_get_contents('sample.txt');
 $lines = array_filter(explode(PHP_EOL, $input));
 
 $validStepTiles = [
@@ -71,9 +71,7 @@ foreach ($lines as $rowIdx => $row) {
     }
     $grid[] = $tiles;
 }
-$displayGrid = $grid;
-
-
+$outGrid = $grid;
 
 $visited = [];
 $currStep = $startStep;
@@ -81,7 +79,7 @@ $stepCount = 1;
 while (true) {
     $visited[] = $currStep;
 
-    $displayGrid[$currStep[0]][$currStep[1]] = 'X';
+    $outGrid[$currStep[0]][$currStep[1]] = 'X';
     $currTile = get_tile($currStep);
     $directions = get_valid_step_directions($currStep);
 
@@ -98,40 +96,31 @@ while (true) {
     $stepCount++;
 }
 
-$res = $stepCount / 2;
-echo $stepCount."\n";
-echo $tileCount.PHP_EOL;
-echo $tileCount - $stepCount.PHP_EOL;
-echo "How many steps along the loop does it take to get to the point farthest from the starting position? {$res}\n";
-
-$x2Grid = doubleResolutionWithBorder($displayGrid);
-
-foreach ($x2Grid as $i => $row) {
-    foreach ($row as $j => $tile) {
-        $x2Grid[$i][$j] = str_replace(['|', '-', 'L', 'J', '7', 'F'], '.', $tile);
-    }
-}
-#print_r($x2Grid);
-#exit;
-
-echo "Double resolution grid before flooding\n";
-foreach ($x2Grid as $i => $row) {
-    $tiles = implode(' ', $row);
-    echo "{$tiles}\n";
+// Convert rows to strings
+for ($i = 0; $i < count($outGrid); $i++) {
+    $rowString = implode('', $outGrid[$i]);
+    $outGrid[$i] = str_replace(['|', '-', 'L', 'J', '7', 'F', 'S'], '.', $rowString);
 }
 
-floodFill($x2Grid, 1, 1, ".", " ");
+// Scale up grid by factor 3
+$scaledGrid = scale_up_grid($outGrid, 3);
+add_border_to_grid($scaledGrid, '.');
 
-$x2Grid = halveResolution($x2Grid);
-
-echo "Original resolution grid after flooding\n";
-foreach ($x2Grid as $row) {
-    $tiles = implode(' ', $row);
-    echo "{$tiles}\n";
-}
+flood_fill_grid($scaledGrid, 1, 1, ".", " ");
+#print_grid($scaledGrid);
 
 $dotCount = 0;
-foreach ($x2Grid as $row) {
+foreach ($scaledGrid as $row) {
+    $dotCount += substr_count($row, '.');
+}
+echo (string)($dotCount / 3)."\n";
+exit;
+$row2Grid = halveResolution($x2Grid);
+
+echo "Original resolution grid after flooding\n";
+
+$dotCount = 0;
+foreach ($row2Grid as $row) {
     foreach ($row as $tile) {
         if ($tile === '....') {
             $dotCount++;
@@ -139,6 +128,44 @@ foreach ($x2Grid as $row) {
     }
 }
 echo "Dots surrounded by loop: {$dotCount}\n";
+
+function add_border_to_grid(&$grid, $char) {
+    array_unshift($grid, str_repeat($char, strlen($grid[0])));
+    array_push($grid, str_repeat($char, strlen($grid[0])));
+    foreach ($grid as $i => $row) {
+        $grid[$i] = $char.$row.$char;
+    }
+}
+
+function scale_up_grid($grid, $factor) {
+    $scaledGrid = [];
+
+    foreach ($grid as $row) {
+        $chars = str_split($row);
+
+        $scaledRow = [];
+        foreach ($chars as $char) {
+            $scaledRow[] = str_repeat($char, $factor);
+        }
+
+        for ($i = 0; $i < $factor; $i++) {
+            $scaledGrid[] = implode('', $scaledRow);
+        }
+    }
+
+    return $scaledGrid;
+}
+
+function print_grid($grid) {
+    foreach ($grid as $row) {
+        if (is_array($row)) {
+            $tiles = implode(' ', $row);
+        } else {
+            $tiles = $row;
+        }
+        echo "{$tiles}\n";
+    }
+}
 
 function get_next_step($currStep, $directions, $tiles) {
     $currTile = get_tile($currStep);
@@ -272,64 +299,23 @@ function double_resolution(array $grid): array {
     return $doubledGrid;
 }
 
-function floodFill(array &$grid, $row, $col, $oldValue, $newValue) {
-    if (
-        $row < 0 || $row >= count($grid) ||
-        $col < 0 || $col >= count($grid[$row]) ||
-        strpos($grid[$row][$col], $oldValue) === false
-    ) {
+function flood_fill_grid(array &$grid, $row, $col, $from, $to) {
+    $rowBreak = $row < 0 || $row >= count($grid);
+    $colBreak = $col < 0 || !isset($grid[$row]) || $col >= strlen($grid[$row]);
+    if ($rowBreak || $colBreak) {
         return;
     }
 
-    $grid[$row][$col] = $newValue;
-
-    // Recursively fill in all directions
-    floodFill($grid, $row - 1, $col, $oldValue, $newValue); // Up
-    floodFill($grid, $row + 1, $col, $oldValue, $newValue); // Down
-    floodFill($grid, $row, $col - 1, $oldValue, $newValue); // Left
-    floodFill($grid, $row, $col + 1, $oldValue, $newValue); // Right
-}
-
-function doubleResolutionWithBorder(array $grid): array {
-    $rows = count($grid);
-    $cols = count($grid[0]);
-
-    // Create a new grid with a border
-    $doubledGrid = [];
-
-    // Add top border
-    $doubledGrid[] = array_fill(0, 2 * $cols + 2, '.');
-    
-    foreach ($grid as $row) {
-        $doubledRow = [];
-        
-        // Add left border
-        $doubledRow[] = '.';
-        
-        foreach ($row as $string) {
-            $doubledString = '';
-            for ($i = 0; $i < strlen($string); $i++) {
-                // Duplicate each character horizontally and vertically
-                $doubledString .= $string[$i] . $string[$i];
-            }
-            
-            // Duplicate each string vertically
-            $doubledRow[] = $doubledString . $doubledString;
-            $doubledRow[] = $doubledString . $doubledString;
-        }
-
-        // Add right border
-        $doubledRow[] = '.';
-        
-        // Add the doubled row to the grid
-        $doubledGrid[] = $doubledRow;
-        $doubledGrid[] = $doubledRow;
+    if ($grid[$row][$col] !== $from) {
+        return;
     }
 
-    // Add bottom border
-    $doubledGrid[] = array_fill(0, 2 * $cols + 2, '.');
+    $grid[$row][$col] = $to;
 
-    return $doubledGrid;
+    flood_fill_grid($grid, $row - 1, $col, $from, $to); // Right
+    flood_fill_grid($grid, $row + 1, $col, $from, $to); // Left
+    flood_fill_grid($grid, $row, $col - 1, $from, $to); // Down
+    flood_fill_grid($grid, $row, $col + 1, $from, $to); // Up
 }
 
 function halveResolution(array $grid): array {
